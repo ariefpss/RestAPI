@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const app = express();
 
 const userRouter = require('./API/router/user');
-const todoRouter = require('./API/router/todo');
 
 app.use(bodyPraser.urlencoded({extended: false}));
 app.use(bodyPraser.json());
@@ -19,6 +18,5 @@ mongoose.connect(
 );
 
 app.use('/user', userRouter);
-app.use('/todo', todoRouter);
 
 module.exports = app;
