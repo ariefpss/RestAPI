@@ -10,7 +10,7 @@ app.use(bodyPraser.urlencoded({extended: false}));
 app.use(bodyPraser.json());
 
 mongoose.connect(
-    'mongodb://localhost:27017/admin',
+    'mongodb://localhost:27017/restapi',
     {useNewUrlParser: true, useCreateIndex: true},
     ()=>{
         console.log("berhasil connect database");

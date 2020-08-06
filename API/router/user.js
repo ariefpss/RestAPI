@@ -6,10 +6,37 @@ const jwt = require('jsonwebtoken');
 
 const chekAuth = require('../middleware/chekAuth');
 const User = require('../model/user');
+const { restart } = require('nodemon');
 
-// mengambil/menampilkan data user
-router.get('/', chekAuth, (req, res, next) => {
-    User.find({_id: req.userData.userid})
+
+// CREATE
+router.post('/signup', (req, res, _next) => {
+    User.find({email: req.body.email})
+        .exec()
+        .then(user => {
+            if (user.length >= 1){
+                return res.status(409).json({
+                    message: 'email telah ada!!'
+                });
+            }else{
+                const passwordHash = bcrypt.hashSync(req.body.password, 10);
+                const user = new User({
+                    _id: new mongoose.Types.ObjectId(),
+                    email: req.body.email,
+                    password: passwordHash
+                });
+                
+                user.save((err) => {
+                    if (err) return res.status(500).json(err);
+                    return res.json(user);
+                });
+            }
+        });
+});
+
+// READ
+router.get('/', (req, res, next) => {
+    User.find()
         .select('_id email password')
         .exec()
         .then(docs => {
@@ -32,28 +59,35 @@ router.get('/', chekAuth, (req, res, next) => {
         });
 });
 
-// create data user
-router.post('/signup', (req, res, _next) => {
-    User.find({email: req.body.email})
+// UPDATE
+router.put('/update/:userid', chekAuth, (req, res, _next) => {
+    User.findByIdAndUpdate({_id: req.params.userid}, {$set:{email: req.body.email}})
         .exec()
-        .then(user => {
-            if (user.length >= 1){
-                return res.status(409).json({
-                    message: 'email telah ada!!'
-                });
-            }else{
-                const passwordHash = bcrypt.hashSync(req.body.password, 10);
-                const user = new User({
-                    _id: new mongoose.Types.ObjectId(),
-                    email: req.body.email,
-                    password: passwordHash
-                });
-                
-                user.save((err) => {
-                    if (err) return res.status(500).json(err);
-                    return res.json(user);
-                });
-            }
+        .then(result => {
+            console.log(result);
+            res.status(200).json({
+                message: 'data user berhasil di update'
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({error: err});
+        })
+});
+
+// DELETE
+router.delete('/delete/:userid', chekAuth, (req, res, _next) => {
+    User.findByIdAndRemove({_id: req.params.userid})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json({
+                message: 'user berhasil dihapus'
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({error: err});
         });
 });
 
@@ -87,22 +121,6 @@ router.post('/login', (req, res, next) => {
                 }
                 
                 return res.status(401).json({message: 'login gagal'})
-            });
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({error: err});
-        });
-});
-
-// menghapus data user
-router.delete('/:userid', chekAuth, (req, res, _next) => {
-    User.findByIdAndRemove({_id: req.params.userid})
-        .exec()
-        .then(result => {
-            console.log(result);
-            res.status(200).json({
-                message: 'user berhasil dihapus'
             });
         })
         .catch(err => {
